@@ -1,24 +1,32 @@
-import logo from './logo.svg';
 import './App.css';
+import { useEffect } from 'react';
 
 function App() {
+
+  useEffect(() => {
+    const eventList = document.getElementById('event-list');
+
+    const eventSource = new EventSource(`https://events.idtolu.net/iot-events/events/${'app01'}`, { withCredentials: false }); // URL del servidor SSE
+
+    eventSource.onopen = () => {
+      console.log('Connected');
+    }
+    
+    eventSource.onmessage = (event) => {
+      console.log(event.data);
+      const newEvent = document.createElement('li');
+      newEvent.textContent = JSON.parse(event.data).count;
+      eventList.appendChild(newEvent);
+    };
+
+    eventSource.onerror = (error) => {
+      console.error('Error en la conexión SSE:', error);
+    };
+
+    return () => eventSource.close();
+  }, []);
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <div id='event-list'></div>
   );
 }
 
